@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create a Post"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Image Picker Button -->
+        <Button
+            android:id="@+id/btnSelectImages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Images"
+            android:drawableLeft="@drawable/ic_plus"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="You can select multiple images."
+            android:textColor="#888"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Image Preview RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvImagePreview"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"/>
+
+        <!-- Restaurant/Cafe Name -->
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Restaurant or Cafe Name"
+            android:inputType="textPersonName"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Address -->
+        <EditText
+            android:id="@+id/etAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Address"
+            android:inputType="textPostalAddress"
+            android:layout_marginBottom="8dp"
+            android:focusable="false"
+            android:clickable="false"
+            android:cursorVisible="false"/>
+
+        <!-- Pick Location Button -->
+        <Button
+            android:id="@+id/btnPickLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pick Location on Map"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Description -->
+        <EditText
+            android:id="@+id/etDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Description"
+            android:inputType="textMultiLine"
+            android:minLines="3"
+            android:gravity="top|start"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Submit Button -->
+        <Button
+            android:id="@+id/btnSubmitPost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Post"
+            android:backgroundTint="@color/black"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+</ScrollView> 

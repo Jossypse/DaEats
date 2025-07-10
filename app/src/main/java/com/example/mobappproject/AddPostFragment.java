@@ -1,0 +1,263 @@
+package com.example.mobappproject;
+
+import android.os.Bundle;
+import androidx.fragment.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import android.app.AlertDialog;
+import android.view.LayoutInflater;
+import android.widget.TextView;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.ByteArrayOutputStream;
+import android.util.Base64;
+import android.widget.ImageView;
+import android.widget.ImageButton;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.fragment.app.Fragment;
+
+public class AddPostFragment extends Fragment implements LocationPickerFragment.OnLocationPickedListener {
+    private static final int PICK_IMAGES_REQUEST = 1;
+    private static final int PICK_PLACE_REQUEST = 2;
+    private List<Uri> selectedImageUris = new ArrayList<>();
+    private RecyclerView rvImagePreview;
+    private ImageAdapter imageAdapter;
+    private EditText etName, etAddress, etDescription;
+    private Button btnSelectImages, btnSubmitPost;
+    private Button btnPickLocation;
+    private ImageButton btnClearImage;
+    private Double selectedLat = null, selectedLng = null;
+
+    private static final int REQUEST_PERMISSION_READ_IMAGES = 100;
+    private AlertDialog progressDialog;
+
+    private void showProgressDialog(String message) {
+        if (progressDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_progress, null);
+            builder.setView(dialogView);
+            builder.setCancelable(false);
+            progressDialog = builder.create();
+        }
+        TextView tvProgress = progressDialog.findViewById(R.id.tvProgress);
+        if (tvProgress != null) tvProgress.setText(message);
+        if (!progressDialog.isShowing()) progressDialog.show();
+    }
+
+    private void hideProgressDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSION_READ_IMAGES) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                launchGalleryIntent();
+            } else {
+                Toast.makeText(getContext(), "Permission denied to access images", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_add_post, container, false);
+
+        rvImagePreview = view.findViewById(R.id.rvImagePreview);
+        imageAdapter = new ImageAdapter(getContext(), selectedImageUris);
+        rvImagePreview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        rvImagePreview.setAdapter(imageAdapter);
+        etName = view.findViewById(R.id.etName);
+        etAddress = view.findViewById(R.id.etAddress);
+        etDescription = view.findViewById(R.id.etDescription);
+        btnSelectImages = view.findViewById(R.id.btnSelectImages);
+        btnSubmitPost = view.findViewById(R.id.btnSubmitPost);
+        btnPickLocation = view.findViewById(R.id.btnPickLocation);
+        btnSelectImages.setOnClickListener(v -> openImagePicker());
+        btnSubmitPost.setOnClickListener(v -> submitPost());
+        btnPickLocation.setOnClickListener(v -> launchLocationPickerDialog());
+
+        // Initialize Places SDK if not already
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext().getApplicationContext(), "AIzaSyAMAVWWep42bXcd6ButIVnJlvwsnIS54po");
+        }
+        return view;
+    }
+
+    private void showImagePreview(Bitmap bitmap) {
+        if (bitmap != null) {
+            // This method is no longer used for single image preview, but kept for consistency
+            // The ImageAdapter handles the preview of multiple images.
+        }
+    }
+
+    private void clearSelectedImage() {
+        // This method is no longer used for single image clearing.
+    }
+
+    private void openImagePicker() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES}, REQUEST_PERMISSION_READ_IMAGES);
+                return;
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION_READ_IMAGES);
+                return;
+            }
+        }
+        launchGalleryIntent();
+    }
+
+    private void launchGalleryIntent() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent, "Select Pictures"), PICK_IMAGES_REQUEST);
+    }
+
+    private void launchLocationPickerDialog() {
+        LocationPickerFragment picker = new LocationPickerFragment();
+        picker.setListener(this);
+        picker.show(getParentFragmentManager(), "location_picker");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGES_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            selectedImageUris.clear();
+            if (data.getClipData() != null) {
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                    selectedImageUris.add(imageUri);
+                }
+            } else if (data.getData() != null) {
+                selectedImageUris.add(data.getData());
+            }
+            imageAdapter.notifyDataSetChanged();
+        } else if (requestCode == PICK_PLACE_REQUEST) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                etAddress.setText(place.getAddress());
+                if (place.getLatLng() != null) {
+                    selectedLat = place.getLatLng().latitude;
+                    selectedLng = place.getLatLng().longitude;
+                }
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                // etAddress.setText("Failed to pick location"); // Removed as per edit hint
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                // User canceled
+            }
+        }
+    }
+
+    private void submitPost() {
+        String name = etName.getText().toString().trim();
+        String address = etAddress.getText().toString().trim();
+        String description = etDescription.getText().toString().trim();
+
+        if (name.isEmpty() || address.isEmpty() || description.isEmpty() || selectedImageUris.isEmpty() || selectedLat == null || selectedLng == null) {
+            Toast.makeText(getContext(), "Please fill all fields, select at least one image, and pick a location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        btnSubmitPost.setEnabled(false);
+        showProgressDialog("Uploading post...");
+        encodeAndUploadPost(name, address, description, selectedImageUris);
+    }
+
+    private void encodeAndUploadPost(String name, String address, String description, List<Uri> imageUris) {
+        try {
+            List<String> base64Images = new ArrayList<>();
+            for (Uri imageUri : imageUris) {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(requireActivity().getContentResolver(), imageUri);
+                Bitmap resized = Bitmap.createScaledBitmap(bitmap, 400, 400, true);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                resized.compress(Bitmap.CompressFormat.JPEG, 60, baos);
+                byte[] imageBytes = baos.toByteArray();
+                String base64Image = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+                base64Images.add(base64Image);
+            }
+            DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
+            String postId = postsRef.push().getKey();
+            Map<String, Object> postMap = new HashMap<>();
+            postMap.put("name", name);
+            postMap.put("address", address);
+            postMap.put("description", description);
+            postMap.put("imagesBase64", base64Images);
+            postMap.put("timestamp", System.currentTimeMillis());
+            postMap.put("latitude", selectedLat);
+            postMap.put("longitude", selectedLng);
+            postsRef.child(postId).setValue(postMap)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "Post uploaded successfully", Toast.LENGTH_SHORT).show();
+                    etName.setText("");
+                    etAddress.setText("");
+                    etDescription.setText("");
+                    selectedImageUris.clear();
+                    imageAdapter.notifyDataSetChanged();
+                    selectedLat = null;
+                    selectedLng = null;
+                    // tvSelectedPlace.setText("No location selected"); // Removed as per edit hint
+                    btnSubmitPost.setEnabled(true);
+                    hideProgressDialog();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to upload post", Toast.LENGTH_SHORT).show();
+                    btnSubmitPost.setEnabled(true);
+                    hideProgressDialog();
+                });
+        } catch (Exception e) {
+            Toast.makeText(getContext(), "Failed to process images", Toast.LENGTH_SHORT).show();
+            btnSubmitPost.setEnabled(true);
+            hideProgressDialog();
+        }
+    }
+
+    @Override
+    public void onLocationPicked(String address, double lat, double lng) {
+        etAddress.setText(address);
+        selectedLat = lat;
+        selectedLng = lng;
+    }
+} 

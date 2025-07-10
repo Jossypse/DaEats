@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Current Location Button -->
+        <Button
+            android:id="@+id/btnCurrentLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current Location"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Map Container -->
+        <FrameLayout
+            android:id="@+id/map_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Confirm Button -->
+        <Button
+            android:id="@+id/btnConfirmLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Confirm Location"
+            android:layout_margin="16dp" />
+    </LinearLayout>
+
+    <!-- Center Pin -->
+    <ImageView
+        android:id="@+id/ivMapPin"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_location_on"
+        android:layout_gravity="center"/>
+
+</FrameLayout> 
