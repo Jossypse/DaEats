@@ -1,48 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    android:layout_width="221dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="4dp">
+    android:layout_margin="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    android:background="@android:color/transparent">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/ivPostImage"
-            android:layout_width="364dp"
-            android:layout_height="302dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/ic_launcher_background"
-            android:scaleType="centerCrop"/>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp">
+
+            <ImageView
+                android:id="@+id/ivPostImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="@drawable/ic_launcher_background"
+                android:contentDescription="Post image"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_gravity="bottom"
+                />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_margin="20dp"
-            android:layout_marginBottom="16dp"
-            android:background="@color/white"
+            android:layout_height="match_parent"
             android:orientation="vertical"
+            android:background="@android:color/white"
             android:padding="16dp">
 
             <TextView
                 android:id="@+id/tvPostName"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
-                android:textSize="18sp"
-                android:layout_marginTop="8dp"/>
+                android:textSize="20sp"
+                android:textColor="#222"
+                android:maxLines="2"
+                android:ellipsize="end"/>
 
             <TextView
                 android:id="@+id/tvPostAddress"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#666"
-                android:layout_marginTop="2dp"/>
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end"/>
 
             <TextView
                 android:id="@+id/tvPostDistance"
@@ -50,22 +64,11 @@
                 android:layout_height="wrap_content"
                 android:textColor="#008577"
                 android:textSize="14sp"
-                android:layout_marginTop="2dp"/>
+               />
 
-            <Button
-                android:id="@+id/btnGetDirections"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Get Directions"
-                android:layout_marginTop="4dp"
-                android:backgroundTint="#008577"
-                android:textColor="@android:color/white"/>
+           
 
-            <TextView
-                android:id="@+id/tvPostDescription"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"/>
+
         </LinearLayout>
-    </FrameLayout>
+    </LinearLayout>
 </androidx.cardview.widget.CardView>

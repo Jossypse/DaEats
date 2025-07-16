@@ -526,7 +526,7 @@ public class HomeFragment extends Fragment {
             Post post = posts.get(position);
             holder.tvName.setText(post.name);
             holder.tvAddress.setText(post.address);
-            holder.tvDescription.setText(post.description);
+
             // Set the first image only
             if (post.imagesBase64 != null && !post.imagesBase64.isEmpty()) {
                 String base64 = post.imagesBase64.get(0);
@@ -551,17 +551,12 @@ public class HomeFragment extends Fragment {
                 float distanceMeters = results[0];
                 String distanceStr = String.format("%.1f km", distanceMeters / 1000);
                 holder.tvDistance.setText("Distance: " + distanceStr);
-                holder.btnGetDirections.setVisibility(View.VISIBLE);
+
             } else {
                 holder.tvDistance.setText("");
-                holder.btnGetDirections.setVisibility(View.GONE);
+
             }
-            holder.btnGetDirections.setOnClickListener(v -> {
-                if (post.latitude != null && post.longitude != null) {
-                    // Show directions popup instead of external intent
-                    HomeFragment.this.showDirectionsPopup(post.latitude, post.longitude);
-                }
-            });
+
             holder.itemView.setOnClickListener(v -> {
                 if (onPostClickListener != null) onPostClickListener.onPostClick(post);
             });
@@ -572,15 +567,14 @@ public class HomeFragment extends Fragment {
             ImageView ivPostImage;
             TextView tvName, tvAddress, tvDescription;
             TextView tvDistance;
-            View btnGetDirections;
+
             public PostViewHolder(@NonNull View itemView) {
                 super(itemView);
                 ivPostImage = itemView.findViewById(R.id.ivPostImage);
                 tvName = itemView.findViewById(R.id.tvPostName);
                 tvAddress = itemView.findViewById(R.id.tvPostAddress);
-                tvDescription = itemView.findViewById(R.id.tvPostDescription);
                 tvDistance = itemView.findViewById(R.id.tvPostDistance);
-                btnGetDirections = itemView.findViewById(R.id.btnGetDirections);
+
             }
         }
     }
