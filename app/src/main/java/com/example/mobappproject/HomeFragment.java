@@ -35,6 +35,9 @@ import androidx.core.app.ActivityCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import androidx.annotation.Nullable;
+import android.widget.FrameLayout;
+import android.widget.Button;
+import android.widget.ImageButton;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvPosts;
@@ -43,6 +46,13 @@ public class HomeFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView tvEmpty;
     private FusedLocationProviderClient fusedLocationClient;
+    private FrameLayout popupOverlayContainer;
+    private View popupView; // To keep reference for removal
+
+    // Add the click listener interface here
+    public interface OnPostClickListener {
+        void onPostClick(Post post);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,8 +60,9 @@ public class HomeFragment extends Fragment {
         rvPosts = view.findViewById(R.id.rvPosts);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         tvEmpty = view.findViewById(R.id.tvEmpty);
-        postAdapter = new PostAdapter(postList);
-        rvPosts.setLayoutManager(new LinearLayoutManager(getContext()));
+        popupOverlayContainer = view.findViewById(R.id.popupOverlayContainer);
+        postAdapter = new PostAdapter(postList, this::showPostPopup);
+        rvPosts.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         rvPosts.setAdapter(postAdapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadPosts);
         loadPosts();
@@ -110,6 +121,92 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    // Function to show popup overlay with post details
+    private void showPostPopup(Post post) {
+        if (getContext() == null || popupOverlayContainer == null) return;
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        popupView = inflater.inflate(R.layout.test, popupOverlayContainer, false);
+        // Populate popupView with post data
+        ViewPager2 imageSlider = popupView.findViewById(R.id.image_slider);
+        LinearLayout indicatorLayout = popupView.findViewById(R.id.image_slider_indicator);
+        TextView placeTitle = popupView.findViewById(R.id.place_title);
+        TextView placeDescription = popupView.findViewById(R.id.place_description);
+        TextView locationText = popupView.findViewById(R.id.location_text);
+        // Set up image slider and indicators
+        if (post.imagesBase64 != null && !post.imagesBase64.isEmpty()) {
+            ImageSliderAdapter sliderAdapter = new ImageSliderAdapter(post.imagesBase64);
+            imageSlider.setAdapter(sliderAdapter);
+            imageSlider.setVisibility(View.VISIBLE);
+            indicatorLayout.setVisibility(post.imagesBase64.size() > 1 ? View.VISIBLE : View.GONE);
+            // Create indicators
+            indicatorLayout.removeAllViews();
+            int count = post.imagesBase64.size();
+            for (int i = 0; i < count; i++) {
+                View dot = new View(getContext());
+                int size = (int) (imageSlider.getResources().getDisplayMetrics().density * 8);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+                params.setMargins(size/2, 0, size/2, 0);
+                dot.setLayoutParams(params);
+                dot.setBackgroundResource(i == 0 ? R.drawable.circle_filled : R.drawable.circle_empty);
+                indicatorLayout.addView(dot);
+            }
+            // Listen for page changes to update indicators
+            imageSlider.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    for (int i = 0; i < indicatorLayout.getChildCount(); i++) {
+                        indicatorLayout.getChildAt(i).setBackgroundResource(i == position ? R.drawable.circle_filled : R.drawable.circle_empty);
+                    }
+                }
+            });
+        } else {
+            imageSlider.setVisibility(View.GONE);
+            indicatorLayout.setVisibility(View.GONE);
+        }
+        placeTitle.setText(post.name);
+        placeDescription.setText(post.description);
+        locationText.setText(post.address);
+        // Add close on background tap
+        popupOverlayContainer.setOnClickListener(v -> hidePopup());
+        // Prevent click-through on popupView
+        popupView.setOnClickListener(v -> {});
+        // Add a visually improved close button
+        Button closeBtn = new Button(getContext());
+        closeBtn.setText("Close");
+        closeBtn.setBackgroundResource(R.drawable.rounded_button); // Use your rounded_button drawable
+        closeBtn.setTextColor(getResources().getColor(android.R.color.white));
+        LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        closeParams.topMargin = (int) (getResources().getDisplayMetrics().density * 8);
+        closeParams.gravity = android.view.Gravity.END;
+        closeBtn.setLayoutParams(closeParams);
+        ((LinearLayout) popupView.findViewById(R.id.place_title).getParent()).addView(closeBtn);
+        closeBtn.setOnClickListener(v -> hidePopup());
+        // Show popup
+        popupOverlayContainer.removeAllViews();
+        popupOverlayContainer.addView(popupView);
+        popupOverlayContainer.setVisibility(View.VISIBLE);
+
+        ImageButton btnLike = popupView.findViewById(R.id.btn_like);
+        // Like button logic: toggle heart icon
+        final boolean[] liked = {false};
+        btnLike.setOnClickListener(v -> {
+            liked[0] = !liked[0];
+            if (liked[0]) {
+                btnLike.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
+                // Optionally show a toast or animation
+            } else {
+                btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
+            }
+        });
+        btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
+    }
+    private void hidePopup() {
+        if (popupOverlayContainer != null) {
+            popupOverlayContainer.setVisibility(View.GONE);
+            popupOverlayContainer.removeAllViews();
+        }
+    }
+
     // Post model
     public static class Post {
         public String name, address, description;
@@ -123,7 +220,11 @@ public class HomeFragment extends Fragment {
         private List<Post> posts;
         private Location userLocation;
         private FusedLocationProviderClient fusedLocationClient;
-        public PostAdapter(List<Post> posts) { this.posts = posts; }
+        private OnPostClickListener onPostClickListener;
+        public PostAdapter(List<Post> posts, OnPostClickListener listener) {
+            this.posts = posts;
+            this.onPostClickListener = listener;
+        }
         @NonNull
         @Override
         public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -136,13 +237,22 @@ public class HomeFragment extends Fragment {
             holder.tvName.setText(post.name);
             holder.tvAddress.setText(post.address);
             holder.tvDescription.setText(post.description);
+            // Set the first image only
             if (post.imagesBase64 != null && !post.imagesBase64.isEmpty()) {
-                ImageSliderAdapter sliderAdapter = new ImageSliderAdapter(post.imagesBase64);
-                holder.vpImages.setAdapter(sliderAdapter);
-                setupPageIndicator(holder.llPageIndicator, post.imagesBase64.size(), holder.vpImages);
+                String base64 = post.imagesBase64.get(0);
+                if (base64 != null && !base64.isEmpty()) {
+                    try {
+                        byte[] imageBytes = Base64.decode(base64, Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                        holder.ivPostImage.setImageBitmap(bitmap);
+                    } catch (Exception e) {
+                        holder.ivPostImage.setImageResource(android.R.color.darker_gray);
+                    }
+                } else {
+                    holder.ivPostImage.setImageResource(android.R.color.darker_gray);
+                }
             } else {
-                holder.vpImages.setAdapter(new ImageSliderAdapter(new ArrayList<>()));
-                holder.llPageIndicator.removeAllViews();
+                holder.ivPostImage.setImageResource(android.R.color.darker_gray);
             }
             // Distance and Directions
             if (post.latitude != null && post.longitude != null && userLocation != null) {
@@ -164,47 +274,26 @@ public class HomeFragment extends Fragment {
                     v.getContext().startActivity(mapIntent);
                 }
             });
+            holder.itemView.setOnClickListener(v -> {
+                if (onPostClickListener != null) onPostClickListener.onPostClick(post);
+            });
         }
         @Override
         public int getItemCount() { return posts.size(); }
         class PostViewHolder extends RecyclerView.ViewHolder {
-            ViewPager2 vpImages;
-            LinearLayout llPageIndicator;
+            ImageView ivPostImage;
             TextView tvName, tvAddress, tvDescription;
             TextView tvDistance;
             View btnGetDirections;
             public PostViewHolder(@NonNull View itemView) {
                 super(itemView);
-                vpImages = itemView.findViewById(R.id.vpPostImages);
-                llPageIndicator = itemView.findViewById(R.id.llPageIndicator);
+                ivPostImage = itemView.findViewById(R.id.ivPostImage);
                 tvName = itemView.findViewById(R.id.tvPostName);
                 tvAddress = itemView.findViewById(R.id.tvPostAddress);
                 tvDescription = itemView.findViewById(R.id.tvPostDescription);
                 tvDistance = itemView.findViewById(R.id.tvPostDistance);
                 btnGetDirections = itemView.findViewById(R.id.btnGetDirections);
             }
-        }
-        // Page indicator
-        private void setupPageIndicator(LinearLayout indicatorLayout, int count, ViewPager2 viewPager) {
-            indicatorLayout.removeAllViews();
-            ImageView[] dots = new ImageView[count];
-            for (int i = 0; i < count; i++) {
-                dots[i] = new ImageView(indicatorLayout.getContext());
-                dots[i].setImageResource(android.R.drawable.presence_invisible);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(20, 20);
-                params.setMargins(4, 0, 4, 0);
-                indicatorLayout.addView(dots[i], params);
-            }
-            if (count > 0) dots[0].setImageResource(android.R.drawable.presence_online);
-            viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-                @Override
-                public void onPageSelected(int position) {
-                    for (int i = 0; i < count; i++) {
-                        dots[i].setImageResource(android.R.drawable.presence_invisible);
-                    }
-                    dots[position].setImageResource(android.R.drawable.presence_online);
-                }
-            });
         }
     }
 
