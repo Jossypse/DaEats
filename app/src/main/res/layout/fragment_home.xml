@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
@@ -17,7 +19,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp"
+                android:background="@color/white">
 
                 <!-- Header Section -->
                 <LinearLayout
@@ -25,7 +28,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="16dp">
 
                     <!-- Greeting Text -->
                     <TextView
@@ -34,79 +37,136 @@
                         android:layout_weight="1"
                         android:layout_height="wrap_content"
                         android:text="Howdy 👋 Michael!!"
-                        android:textSize="18sp"
-                        android:textStyle="bold"/>
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/black"/>
 
-                    <!-- User Icon -->
-                    <ImageView
-                        android:id="@+id/user_icon"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_user"
-                        android:layout_marginStart="8dp"/>
-
+                    <!-- User Icon (Circular) -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="2dp"
+                        android:layout_marginStart="12dp"
+                        app:cardBackgroundColor="@color/white">
+                        <ImageView
+                            android:id="@+id/user_icon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/ic_user"
+                            android:scaleType="centerCrop"
+                            android:padding="4dp"/>
+                    </androidx.cardview.widget.CardView>
                 </LinearLayout>
 
                 <!-- Location Text -->
-                <TextView
-                    android:id="@+id/location_text"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Daet, Camarines Norte, Philippines"
-                    android:textSize="14sp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_location_on"
+                        android:layout_marginEnd="6dp"/>
+                    <TextView
+                        android:id="@+id/location_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Daet, Camarines Norte, Philippines"
+                        android:textSize="14sp"
+                        android:textColor="@color/black"/>
+                </LinearLayout>
 
-                <!-- Search Bar -->
-                <EditText
-                    android:id="@+id/search_bar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Start searching here..."
-                    android:padding="10dp"
-                    android:background="@drawable/search_bar_background"/>
+<!--                &lt;!&ndash; Search Bar &ndash;&gt;-->
+<!--                <com.google.android.material.textfield.TextInputLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginBottom="16dp"-->
+<!--                    app:boxCornerRadiusTopStart="16dp" app:boxCornerRadiusTopEnd="16dp" app:boxCornerRadiusBottomStart="16dp" app:boxCornerRadiusBottomEnd="16dp">-->
+<!--                    <com.google.android.material.textfield.TextInputEditText-->
+<!--                        android:id="@+id/search_bar"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:hint="Start searching here..."-->
+<!--                        android:inputType="text"-->
+<!--                        android:padding="10dp"/>-->
+<!--                </com.google.android.material.textfield.TextInputLayout>-->
 
                 <!-- Discover Places Header -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Discover Places"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="16dp"/>
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"/>
 
-                <!-- Filter Buttons -->
-                <LinearLayout
+                <!-- Filter Buttons (Horizontally Scrollable) -->
+                <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
+                    android:fillViewport="false"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="12dp">
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <LinearLayout
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="All"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="Restaurants"/>
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="All"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:cornerRadius="20dp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="Café"/>
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="Restaurants"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:cornerRadius="20dp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
 
-                </LinearLayout>
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="Café"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:cornerRadius="20dp"
+                            android:textColor="@color/black"
+                            android:layout_marginEnd="8dp"/>
 
-                <!-- RecyclerView for Discover Places -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvPosts"
+                        <!-- Add more buttons as needed -->
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- Discover Places Card -->
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="300dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="8dp" />
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp"
+                    android:layout_marginBottom="16dp">
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvPosts"
+                        android:layout_width="match_parent"
+                        android:layout_height="300dp"
+                        android:padding="8dp"/>
+                </androidx.cardview.widget.CardView>
 
                 <TextView
                     android:id="@+id/tvEmpty"
@@ -114,24 +174,49 @@
                     android:layout_height="wrap_content"
                     android:text="No posts yet."
                     android:textSize="18sp"
+                    android:textColor="@color/black"
                     android:layout_gravity="center"
-                    android:visibility="gone"/>
+                    android:visibility="gone"
+                    android:layout_marginBottom="16dp"/>
 
                 <!-- People Liked Header -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="People Liked"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="16dp"/>
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"/>
 
-                <!-- Liked Places List -->
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Liked Places Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Hoogpaan Restaurant"
-                    android:textSize="16sp"/>
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_heart"
+                            android:layout_marginEnd="12dp"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hoogpaan Restaurant"
+                            android:textSize="16sp"
+                            android:textColor="@color/black"
+                            android:fontFamily="sans-serif"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

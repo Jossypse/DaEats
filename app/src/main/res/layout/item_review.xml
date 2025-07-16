@@ -1,0 +1,53 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_marginLeft="10dp"
+    android:background="@drawable/rounded_background"
+    android:layout_marginBottom="8dp"
+    android:clipToOutline="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/profile_image"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_profile"
+            android:scaleType="centerCrop"
+            android:background="@drawable/circle_background"/>
+
+        <TextView
+            android:id="@+id/reviewer_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alyas Tite"
+            android:textSize="16sp"
+            android:textColor="#222"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/star_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="★★★★☆"
+            android:textSize="14sp"
+            android:textColor="#FFA000"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/comment_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="The best service I’ve received in a long time! The team was incredibly responsive, and their expertise was evident in the final product. There was a small miscommunication initially, but they quickly resolved it. I would definitely work with them again."
+        android:textSize="14sp"
+        android:textColor="#222"
+        android:layout_marginTop="4dp"/>
+
+</LinearLayout>

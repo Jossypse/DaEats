@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -24,6 +23,7 @@ import java.util.List;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.app.AlertDialog;
 import androidx.viewpager2.widget.ViewPager2;
+import com.google.android.material.tabs.TabLayout;
 import android.widget.LinearLayout;
 import android.Manifest;
 import android.content.Intent;
@@ -31,13 +31,19 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import androidx.core.content.ContextCompat;
-import androidx.core.app.ActivityCompat;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import androidx.annotation.Nullable;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.webkit.WebView;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.widget.EditText;
+import android.widget.RatingBar;
+import android.widget.Toast;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvPosts;
@@ -66,6 +72,23 @@ public class HomeFragment extends Fragment {
         rvPosts.setAdapter(postAdapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadPosts);
         loadPosts();
+
+        // Set greeting and address from SharedPreferences
+        TextView greetingText = view.findViewById(R.id.greeting_text);
+        TextView locationText = view.findViewById(R.id.location_text);
+        android.content.Context context = getContext();
+        if (context != null) {
+            android.content.SharedPreferences prefs = context.getSharedPreferences("user_session", android.content.Context.MODE_PRIVATE);
+            String firstName = prefs.getString("firstName", "");
+            String userId = prefs.getString("userId", "");
+            String address = prefs.getString("address", "");
+            if (!firstName.isEmpty() && !userId.isEmpty()) {
+                greetingText.setText("Howdy \uD83D\uDC4B " + firstName );
+            }
+            if (!address.isEmpty()) {
+                locationText.setText(address);
+            }
+        }
         return view;
     }
 
@@ -108,7 +131,10 @@ public class HomeFragment extends Fragment {
                 postList.clear();
                 for (DataSnapshot postSnap : snapshot.getChildren()) {
                     Post post = postSnap.getValue(Post.class);
-                    postList.add(post);
+                    if (post != null) {
+                        post.id = postSnap.getKey(); // Set the top-level ID
+                        postList.add(post);
+                    }
                 }
                 postAdapter.notifyDataSetChanged();
                 swipeRefreshLayout.setRefreshing(false);
@@ -125,39 +151,67 @@ public class HomeFragment extends Fragment {
     private void showPostPopup(Post post) {
         if (getContext() == null || popupOverlayContainer == null) return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        popupView = inflater.inflate(R.layout.test, popupOverlayContainer, false);
+        popupView = inflater.inflate(R.layout.viewstablish, popupOverlayContainer, false);
         // Populate popupView with post data
         ViewPager2 imageSlider = popupView.findViewById(R.id.image_slider);
-        LinearLayout indicatorLayout = popupView.findViewById(R.id.image_slider_indicator);
+        TabLayout indicatorLayout = popupView.findViewById(R.id.image_slider_indicator);
         TextView placeTitle = popupView.findViewById(R.id.place_title);
         TextView placeDescription = popupView.findViewById(R.id.place_description);
         TextView locationText = popupView.findViewById(R.id.location_text);
+        TextView hoursText = popupView.findViewById(R.id.hours_text);
+        TextView phoneText = popupView.findViewById(R.id.phone_text);
+        TextView travelTimeText = popupView.findViewById(R.id.travel_time);
+        // Travel mode cycling setup
+        final String[] modes = {"car", "motorcycle", "walk", "bike"};
+        final double[] speeds = {666.67, 500.0, 80.0, 250.0}; // meters/min: car~40km/h, motorcycle~30km/h, walk~5km/h, bike~15km/h
+        final int[] modeIndex = {0};
+        // Helper to update travel time display
+        Runnable updateTravelTime = () -> {
+            if (post.latitude != null && post.longitude != null && postAdapter.userLocation != null) {
+                float[] results = new float[1];
+                Location.distanceBetween(postAdapter.userLocation.getLatitude(), postAdapter.userLocation.getLongitude(), post.latitude, post.longitude, results);
+                float distanceMeters = results[0];
+                int minutes = (int) Math.round(distanceMeters / speeds[modeIndex[0]]);
+                if (minutes < 1) minutes = 1;
+                String distanceStr = String.format("%.1f km", distanceMeters / 1000);
+                String modeLabel = modes[modeIndex[0]];
+                travelTimeText.setText(distanceStr + " • " + minutes + " min by " + modeLabel);
+            } else {
+                travelTimeText.setText("N/A");
+            }
+        };
+        updateTravelTime.run();
+        travelTimeText.setOnClickListener(v -> {
+            modeIndex[0] = (modeIndex[0] + 1) % modes.length;
+            updateTravelTime.run();
+        });
         // Set up image slider and indicators
         if (post.imagesBase64 != null && !post.imagesBase64.isEmpty()) {
             ImageSliderAdapter sliderAdapter = new ImageSliderAdapter(post.imagesBase64);
             imageSlider.setAdapter(sliderAdapter);
             imageSlider.setVisibility(View.VISIBLE);
             indicatorLayout.setVisibility(post.imagesBase64.size() > 1 ? View.VISIBLE : View.GONE);
-            // Create indicators
-            indicatorLayout.removeAllViews();
+            // Create indicators using TabLayout
+            indicatorLayout.removeAllTabs();
             int count = post.imagesBase64.size();
             for (int i = 0; i < count; i++) {
-                View dot = new View(getContext());
-                int size = (int) (imageSlider.getResources().getDisplayMetrics().density * 8);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
-                params.setMargins(size/2, 0, size/2, 0);
-                dot.setLayoutParams(params);
-                dot.setBackgroundResource(i == 0 ? R.drawable.circle_filled : R.drawable.circle_empty);
-                indicatorLayout.addView(dot);
+                indicatorLayout.addTab(indicatorLayout.newTab());
             }
             // Listen for page changes to update indicators
             imageSlider.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
-                    for (int i = 0; i < indicatorLayout.getChildCount(); i++) {
-                        indicatorLayout.getChildAt(i).setBackgroundResource(i == position ? R.drawable.circle_filled : R.drawable.circle_empty);
-                    }
+                    indicatorLayout.selectTab(indicatorLayout.getTabAt(position));
                 }
+            });
+            // Optional: allow clicking tabs to change page
+            indicatorLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    imageSlider.setCurrentItem(tab.getPosition());
+                }
+                @Override public void onTabUnselected(TabLayout.Tab tab) {}
+                @Override public void onTabReselected(TabLayout.Tab tab) {}
             });
         } else {
             imageSlider.setVisibility(View.GONE);
@@ -166,20 +220,27 @@ public class HomeFragment extends Fragment {
         placeTitle.setText(post.name);
         placeDescription.setText(post.description);
         locationText.setText(post.address);
+        hoursText.setText("Hours: " + (post.openTime != null ? post.openTime : "?") + " - " + (post.closeTime != null ? post.closeTime : "?"));
+        phoneText.setText("Phone: " + (post.contactNumber != null ? post.contactNumber : "?"));
+        // Calculate travel time if possible
+        if (post.latitude != null && post.longitude != null && postAdapter.userLocation != null) {
+            float[] results = new float[1];
+            Location.distanceBetween(postAdapter.userLocation.getLatitude(), postAdapter.userLocation.getLongitude(), post.latitude, post.longitude, results);
+            float distanceMeters = results[0];
+            // Assume average driving speed 40km/h (666.67 m/min)
+            int minutes = (int) Math.round(distanceMeters / 666.67);
+            if (minutes < 1) minutes = 1;
+            travelTimeText.setText(minutes + " min by car");
+        } else {
+            travelTimeText.setText("N/A");
+        }
         // Add close on background tap
         popupOverlayContainer.setOnClickListener(v -> hidePopup());
         // Prevent click-through on popupView
         popupView.setOnClickListener(v -> {});
-        // Add a visually improved close button
-        Button closeBtn = new Button(getContext());
-        closeBtn.setText("Close");
-        closeBtn.setBackgroundResource(R.drawable.rounded_button); // Use your rounded_button drawable
-        closeBtn.setTextColor(getResources().getColor(android.R.color.white));
-        LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        closeParams.topMargin = (int) (getResources().getDisplayMetrics().density * 8);
-        closeParams.gravity = android.view.Gravity.END;
-        closeBtn.setLayoutParams(closeParams);
-        ((LinearLayout) popupView.findViewById(R.id.place_title).getParent()).addView(closeBtn);
+
+
+        Button closeBtn = popupView.findViewById(R.id.close_btn);
         closeBtn.setOnClickListener(v -> hidePopup());
         // Show popup
         popupOverlayContainer.removeAllViews();
@@ -199,7 +260,125 @@ public class HomeFragment extends Fragment {
             }
         });
         btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
+
+        // Wire up Get Directions button in the popup
+        Button getDirectionsBtn = popupView.findViewById(R.id.get_directions_btn);
+        if (post.latitude != null && post.longitude != null) {
+            getDirectionsBtn.setEnabled(true);
+            getDirectionsBtn.setOnClickListener(v -> showDirectionsPopup(post.latitude, post.longitude));
+        } else {
+            getDirectionsBtn.setEnabled(false);
+        }
+
+
+        Button show = popupView.findViewById(R.id.btn_write_review);
+        show.setOnClickListener(v -> showAddReviewDialog(post));
+
+        // --- Add this block to display reviews ---
+        RecyclerView reviewsRecycler = popupView.findViewById(R.id.reviews_recycler);
+        reviewsRecycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        List<Review> reviewList = new ArrayList<>();
+        List<String> reviewerIds = new ArrayList<>();
+        ReviewAdapter reviewAdapter = new ReviewAdapter(reviewList, reviewerIds);
+        reviewsRecycler.setAdapter(reviewAdapter);
+        // Load reviews from Firebase for this post
+        DatabaseReference reviewsRef = FirebaseDatabase.getInstance().getReference("reviews").child(post.id);
+        reviewsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                reviewList.clear();
+                reviewerIds.clear();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    Review review = child.getValue(Review.class);
+                    if (review != null) {
+                        reviewList.add(review);
+                        reviewerIds.add(child.getKey()); // userId is the key
+                    }
+                }
+                reviewAdapter.notifyDataSetChanged();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Optionally handle error
+            }
+        });
+        // --- End reviews block ---
     }
+
+    private void showDirectionsPopup(double destLat, double destLng) {
+        if (getContext() == null || popupOverlayContainer == null) return;
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View directionsView = inflater.inflate(R.layout.popup_directions, popupOverlayContainer, false);
+        WebView webView = directionsView.findViewById(R.id.webview_directions);
+        Button closeBtn = directionsView.findViewById(R.id.btn_close_directions);
+        webView.getSettings().setJavaScriptEnabled(true);
+        // Get user's current location if available
+        double userLat = 14.0; // fallback
+        double userLng = 122.0;
+        if (postAdapter.userLocation != null) {
+            userLat = postAdapter.userLocation.getLatitude();
+            userLng = postAdapter.userLocation.getLongitude();
+        }
+        String url = "https://www.google.com/maps/dir/?api=1&origin=" + userLat + "," + userLng +
+                "&destination=" + destLat + "," + destLng + "&travelmode=driving";
+        webView.loadUrl(url);
+        closeBtn.setOnClickListener(v -> hidePopup());
+        // Show popup
+        popupOverlayContainer.removeAllViews();
+        popupOverlayContainer.addView(directionsView);
+        popupOverlayContainer.setVisibility(View.VISIBLE);
+    }
+
+    private void showAddReviewDialog(Post post) {
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_review, null);
+        RatingBar ratingBar = dialogView.findViewById(R.id.rating_bar);
+        EditText editComment = dialogView.findViewById(R.id.edit_comment);
+        new AlertDialog.Builder(getContext())
+            .setTitle("Write a Review")
+            .setView(dialogView)
+            .setPositiveButton("Submit", (dialog, which) -> {
+                int star = (int) ratingBar.getRating();
+                String comment = editComment.getText().toString().trim();
+                if (star > 0 && !comment.isEmpty()) {
+                    saveReviewToFirebase(post, star, comment);
+                } else {
+                    Toast.makeText(getContext(), "Please provide a rating and comment", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void saveReviewToFirebase(Post post, int star, String comment) {
+        // Get user ID from SharedPreferences
+        SharedPreferences prefs = getContext().getSharedPreferences("user_session", Context.MODE_PRIVATE);
+        String userId = prefs.getString("userId", null);
+        if (userId == null) {
+            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Use post.id as unique identifier for the post
+        String postId = post.id;
+        if (postId == null || postId.isEmpty()) {
+            Toast.makeText(getContext(), "Post ID missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        com.example.mobappproject.Review review = new com.example.mobappproject.Review(comment, star);
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("reviews")
+            .child(postId)
+            .child(userId);
+        ref.setValue(review)
+            .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Review submitted!", Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to submit review", Toast.LENGTH_SHORT).show());
+    }
+
+    // Helper to get postId (assumes Post has a unique name or add an id field to Post)
+    private String getPostIdForPost(Post post) {
+        // If Post has an id field, use it. Otherwise, fallback to name (not recommended for real apps)
+        // return post.id;
+        return post.name != null ? post.name.replaceAll("\\s+", "_").toLowerCase() : "unknown_post";
+    }
+
     private void hidePopup() {
         if (popupOverlayContainer != null) {
             popupOverlayContainer.setVisibility(View.GONE);
@@ -209,9 +388,11 @@ public class HomeFragment extends Fragment {
 
     // Post model
     public static class Post {
+        public String id;
         public String name, address, description;
         public List<String> imagesBase64;
         public Double latitude, longitude;
+        public String contactNumber, openTime, closeTime;
         public Post() {}
     }
 
@@ -268,10 +449,8 @@ public class HomeFragment extends Fragment {
             }
             holder.btnGetDirections.setOnClickListener(v -> {
                 if (post.latitude != null && post.longitude != null) {
-                    Uri gmmIntentUri = Uri.parse("google.navigation:q=" + post.latitude + "," + post.longitude);
-                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                    mapIntent.setPackage("com.google.android.apps.maps");
-                    v.getContext().startActivity(mapIntent);
+                    // Show directions popup instead of external intent
+                    HomeFragment.this.showDirectionsPopup(post.latitude, post.longitude);
                 }
             });
             holder.itemView.setOnClickListener(v -> {

@@ -47,6 +47,7 @@ import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
+import android.app.TimePickerDialog;
 
 public class AddPostFragment extends Fragment implements LocationPickerFragment.OnLocationPickedListener {
     private static final int PICK_IMAGES_REQUEST = 1;
@@ -54,11 +55,13 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
     private List<Uri> selectedImageUris = new ArrayList<>();
     private RecyclerView rvImagePreview;
     private ImageAdapter imageAdapter;
-    private EditText etName, etAddress, etDescription;
+    private EditText etName, etAddress, etDescription, etContactNumber, etOpenTime, etCloseTime;
     private Button btnSelectImages, btnSubmitPost;
     private Button btnPickLocation;
     private ImageButton btnClearImage;
     private Double selectedLat = null, selectedLng = null;
+    private String openTime = "", closeTime = "";
+    private String userId; // Add this field to store the current user's ID
 
     private static final int REQUEST_PERMISSION_READ_IMAGES = 100;
     private AlertDialog progressDialog;
@@ -105,16 +108,28 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
         etName = view.findViewById(R.id.etName);
         etAddress = view.findViewById(R.id.etAddress);
         etDescription = view.findViewById(R.id.etDescription);
+        etContactNumber = view.findViewById(R.id.etContactNumber);
+        etOpenTime = view.findViewById(R.id.etOpenTime);
+        etCloseTime = view.findViewById(R.id.etCloseTime);
         btnSelectImages = view.findViewById(R.id.btnSelectImages);
         btnSubmitPost = view.findViewById(R.id.btnSubmitPost);
         btnPickLocation = view.findViewById(R.id.btnPickLocation);
         btnSelectImages.setOnClickListener(v -> openImagePicker());
         btnSubmitPost.setOnClickListener(v -> submitPost());
         btnPickLocation.setOnClickListener(v -> launchLocationPickerDialog());
+        etOpenTime.setOnClickListener(v -> showTimePicker(etOpenTime, true));
+        etCloseTime.setOnClickListener(v -> showTimePicker(etCloseTime, false));
 
         // Initialize Places SDK if not already
         if (!Places.isInitialized()) {
             Places.initialize(requireContext().getApplicationContext(), "AIzaSyAMAVWWep42bXcd6ButIVnJlvwsnIS54po");
+        }
+
+        // Fetch userId from SharedPreferences
+        android.content.Context context = getContext();
+        if (context != null) {
+            android.content.SharedPreferences prefs = context.getSharedPreferences("user_session", android.content.Context.MODE_PRIVATE);
+            userId = prefs.getString("userId", null);
         }
         return view;
     }
@@ -191,22 +206,35 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
         }
     }
 
+    private void showTimePicker(EditText target, boolean isOpen) {
+        int hour = 9, minute = 0;
+        TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(), (view, hourOfDay, minuteOfHour) -> {
+            String time = String.format("%02d:%02d", hourOfDay, minuteOfHour);
+            target.setText(time);
+            if (isOpen) openTime = time; else closeTime = time;
+        }, hour, minute, true);
+        timePickerDialog.show();
+    }
+
     private void submitPost() {
         String name = etName.getText().toString().trim();
         String address = etAddress.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
+        String contactNumber = etContactNumber.getText().toString().trim();
+        String openTimeVal = etOpenTime.getText().toString().trim();
+        String closeTimeVal = etCloseTime.getText().toString().trim();
 
-        if (name.isEmpty() || address.isEmpty() || description.isEmpty() || selectedImageUris.isEmpty() || selectedLat == null || selectedLng == null) {
+        if (name.isEmpty() || address.isEmpty() || description.isEmpty() || contactNumber.isEmpty() || openTimeVal.isEmpty() || closeTimeVal.isEmpty() || selectedImageUris.isEmpty() || selectedLat == null || selectedLng == null) {
             Toast.makeText(getContext(), "Please fill all fields, select at least one image, and pick a location", Toast.LENGTH_SHORT).show();
             return;
         }
 
         btnSubmitPost.setEnabled(false);
         showProgressDialog("Uploading post...");
-        encodeAndUploadPost(name, address, description, selectedImageUris);
+        encodeAndUploadPost(name, address, description, contactNumber, openTimeVal, closeTimeVal, selectedImageUris);
     }
 
-    private void encodeAndUploadPost(String name, String address, String description, List<Uri> imageUris) {
+    private void encodeAndUploadPost(String name, String address, String description, String contactNumber, String openTime, String closeTime, List<Uri> imageUris) {
         try {
             List<String> base64Images = new ArrayList<>();
             for (Uri imageUri : imageUris) {
@@ -219,26 +247,33 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
                 base64Images.add(base64Image);
             }
             DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
-            String postId = postsRef.push().getKey();
+            String uniqueId = postsRef.push().getKey();
+            String postId = (userId != null ? userId + "-" + uniqueId : uniqueId); // Ensure userId is included
             Map<String, Object> postMap = new HashMap<>();
             postMap.put("name", name);
             postMap.put("address", address);
             postMap.put("description", description);
+            postMap.put("contactNumber", contactNumber);
+            postMap.put("openTime", openTime);
+            postMap.put("closeTime", closeTime);
             postMap.put("imagesBase64", base64Images);
             postMap.put("timestamp", System.currentTimeMillis());
             postMap.put("latitude", selectedLat);
             postMap.put("longitude", selectedLng);
+            postMap.put("userId", userId); // Optionally store userId in the post data
             postsRef.child(postId).setValue(postMap)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Post uploaded successfully", Toast.LENGTH_SHORT).show();
                     etName.setText("");
                     etAddress.setText("");
                     etDescription.setText("");
+                    etContactNumber.setText("");
+                    etOpenTime.setText("");
+                    etCloseTime.setText("");
                     selectedImageUris.clear();
                     imageAdapter.notifyDataSetChanged();
                     selectedLat = null;
                     selectedLng = null;
-                    // tvSelectedPlace.setText("No location selected"); // Removed as per edit hint
                     btnSubmitPost.setEnabled(true);
                     hideProgressDialog();
                 })

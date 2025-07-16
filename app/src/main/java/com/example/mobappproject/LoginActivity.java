@@ -51,32 +51,41 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "Please enter all fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                usersRef.child(username).addListenerForSingleValueEvent(new ValueEventListener() {
+                usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
-                            String dbPassword = snapshot.child("password").getValue(String.class);
-                            if (password.equals(dbPassword)) {
-                                // Save session
-                                String firstName = snapshot.child("firstName").getValue(String.class);
-                                String lastName = snapshot.child("lastName").getValue(String.class);
-                                String address = snapshot.child("address").getValue(String.class);
-                                android.content.SharedPreferences prefs = getSharedPreferences("user_session", MODE_PRIVATE);
-                                android.content.SharedPreferences.Editor editor = prefs.edit();
-                                editor.putString("username", username);
-                                editor.putString("firstName", firstName);
-                                editor.putString("lastName", lastName);
-                                editor.putString("address", address);
-                                editor.putBoolean("is_logged_in", true);
-                                editor.apply();
-                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                intent.putExtra("username", username);
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
+                        boolean found = false;
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            String dbUsername = userSnap.child("username").getValue(String.class);
+                            if (username.equals(dbUsername)) {
+                                found = true;
+                                String dbPassword = userSnap.child("password").getValue(String.class);
+                                if (password.equals(dbPassword)) {
+                                    // Save session
+                                    String firstName = userSnap.child("firstName").getValue(String.class);
+                                    String lastName = userSnap.child("lastName").getValue(String.class);
+                                    String address = userSnap.child("address").getValue(String.class);
+                                    String userId = userSnap.child("userId").getValue(String.class);
+                                    android.content.SharedPreferences prefs = getSharedPreferences("user_session", MODE_PRIVATE);
+                                    android.content.SharedPreferences.Editor editor = prefs.edit();
+                                    editor.putString("username", username);
+                                    editor.putString("firstName", firstName);
+                                    editor.putString("lastName", lastName);
+                                    editor.putString("address", address);
+                                    editor.putString("userId", userId);
+                                    editor.putBoolean("is_logged_in", true);
+                                    editor.apply();
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    intent.putExtra("username", username);
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    Toast.makeText(LoginActivity.this, "Incorrect password", Toast.LENGTH_SHORT).show();
+                                }
+                                break;
                             }
-                        } else {
+                        }
+                        if (!found) {
                             Toast.makeText(LoginActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
                         }
                     }

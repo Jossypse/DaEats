@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+
+
+        <!-- Image Slider with TabLayout indicator -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            android:layout_marginBottom="16dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/image_slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+                <!-- Like Button -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btn_like"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="16dp"
+                    app:srcCompat="@drawable/ic_heart"
+                    app:backgroundTint="?attr/colorPrimary"
+                    android:contentDescription="Like"/>
+            </FrameLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- TabLayout for image slider indicator -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/image_slider_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabSelectedTextColor="?attr/colorPrimary"
+            app:tabTextColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Location, Title, Description, etc. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@android:drawable/ic_menu_mylocation"
+                android:contentDescription="Location Icon" />
+
+            <TextView
+                android:id="@+id/location_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="F. Pimentel Avenue, corner Urbano St"
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="?attr/colorPrimary"
+                android:layout_marginStart="6dp"
+                android:maxLines="6" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/place_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="The Rustic Cafe"
+            style="@style/TextAppearance.MaterialComponents.Headline5"
+            android:textColor="?attr/colorOnBackground"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/place_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sweet, salty and everything in between. Available in coffee-based or non-coffee options—your perfect pick!"
+            style="@style/TextAppearance.MaterialComponents.Body1"
+            android:textColor="?attr/colorOnBackground"
+            android:lineSpacingMultiplier="1.2"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Hours and Phone -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/hours_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hours: 10AM - 10PM"
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="?attr/colorOnBackground"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:id="@+id/phone_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phone: 0917 808 4887"
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="?attr/colorOnBackground" />
+        </LinearLayout>
+
+        <!-- Rating, Reviews, Travel Time -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:weightSum="3">
+
+            <!-- Rating -->
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/btn_star_big_on"
+                    android:contentDescription="Star icon" />
+
+                <TextView
+                    android:id="@+id/rating_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4.0"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="?attr/colorOnBackground"
+                    android:layout_marginStart="6dp"/>
+            </LinearLayout>
+
+            <!-- Read Reviews -->
+            <TextView
+                android:id="@+id/read_reviews"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:textColor="?attr/colorPrimary"
+                android:gravity="center"
+                android:padding="6dp"
+                android:background="?attr/selectableItemBackground"
+                android:layout_marginStart="8dp"/>
+
+            <!-- Travel info -->
+            <LinearLayout
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|end">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/ic_dialog_map"
+                    android:contentDescription="Car icon" />
+
+                <TextView
+                    android:id="@+id/travel_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30 min by car"
+                    style="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="?attr/colorOnBackground"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Divider line -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#e0e0e0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Customer Reviews Header and Write Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/customer_reviews_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Customer reviews"
+                style="@style/TextAppearance.MaterialComponents.Subtitle1"
+                android:textColor="?attr/colorOnBackground"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_write_review"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Write a Review"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:textAllCaps="false"
+                android:icon="@android:drawable/ic_input_add"
+                app:iconPadding="8dp"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <!-- Reviews RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/reviews_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="120dp"
+            android:layout_marginBottom="24dp"
+            android:nestedScrollingEnabled="false"
+            android:orientation="horizontal"/>
+
+        <!-- Get Directions Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/get_directions_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Get Directions"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_marginTop="24dp"
+          />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/close_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Close"
+            style="@style/Widget.MaterialComponents.Button"
+           />
+
+    </LinearLayout>
+</ScrollView>
+

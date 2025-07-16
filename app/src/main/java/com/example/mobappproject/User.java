@@ -6,17 +6,19 @@ public class User {
     private String address;
     private String username;
     private String password;
+    private String userId;
 
     public User() {
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
-    public User(String firstName, String lastName, String address, String username, String password) {
+    public User(String firstName, String lastName, String address, String username, String password, String userId) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
         this.username = username;
         this.password = password;
+        this.userId = userId;
     }
 
     public String getFirstName() { return firstName; }
@@ -33,4 +35,7 @@ public class User {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 } 
