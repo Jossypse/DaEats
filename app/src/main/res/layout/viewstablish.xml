@@ -34,12 +34,12 @@
                 <!-- Like Button -->
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/btn_like"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
                     android:layout_gravity="bottom|end"
-                    android:layout_margin="16dp"
+                    android:layout_margin="10dp"
                     app:srcCompat="@drawable/ic_heart"
-                    app:backgroundTint="?attr/colorPrimary"
+                    app:backgroundTint="@color/white"
                     android:contentDescription="Like"/>
             </FrameLayout>
         </androidx.cardview.widget.CardView>

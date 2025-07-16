@@ -44,11 +44,13 @@ import android.content.SharedPreferences;
 import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.Toast;
+import java.util.Collections;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvPosts;
     private PostAdapter postAdapter;
     private List<Post> postList = new ArrayList<>();
+    private List<Post> filteredPostList = new ArrayList<>();
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextView tvEmpty;
     private FusedLocationProviderClient fusedLocationClient;
@@ -60,6 +62,13 @@ public class HomeFragment extends Fragment {
         void onPostClick(Post post);
     }
 
+    private com.google.android.material.button.MaterialButton btnAll, btnRestaurants, btnCafe;
+    private com.google.android.material.button.MaterialButton selectedFilterButton;
+
+    private static final String TYPE_BOTH = "Both";
+    private static final String TYPE_CAFE = "Cafe";
+    private static final String TYPE_RESTAURANT = "Restaurant";
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
@@ -67,7 +76,7 @@ public class HomeFragment extends Fragment {
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         tvEmpty = view.findViewById(R.id.tvEmpty);
         popupOverlayContainer = view.findViewById(R.id.popupOverlayContainer);
-        postAdapter = new PostAdapter(postList, this::showPostPopup);
+        postAdapter = new PostAdapter(filteredPostList, this::showPostPopup);
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         rvPosts.setAdapter(postAdapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadPosts);
@@ -89,6 +98,26 @@ public class HomeFragment extends Fragment {
                 locationText.setText(address);
             }
         }
+
+        // Setup filter buttons
+        btnAll = view.findViewById(R.id.btnAll);
+        btnRestaurants = view.findViewById(R.id.btnRestaurants);
+        btnCafe = view.findViewById(R.id.btnCafe);
+        selectedFilterButton = btnAll;
+        highlightSelectedFilter(btnAll);
+        btnAll.setOnClickListener(v -> {
+            filterPostsByType(TYPE_BOTH);
+            highlightSelectedFilter(btnAll);
+        });
+        btnRestaurants.setOnClickListener(v -> {
+            filterPostsByType(TYPE_RESTAURANT);
+            highlightSelectedFilter(btnRestaurants);
+        });
+        btnCafe.setOnClickListener(v -> {
+            filterPostsByType(TYPE_CAFE);
+            highlightSelectedFilter(btnCafe);
+        });
+
         return view;
     }
 
@@ -100,6 +129,7 @@ public class HomeFragment extends Fragment {
             fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
                 if (location != null) {
                     postAdapter.userLocation = location;
+                    sortPostsByProximity(location);
                     postAdapter.notifyDataSetChanged();
                 }
             });
@@ -115,6 +145,7 @@ public class HomeFragment extends Fragment {
                 fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
                     if (location != null) {
                         postAdapter.userLocation = location;
+                        sortPostsByProximity(location);
                         postAdapter.notifyDataSetChanged();
                     }
                 });
@@ -136,15 +167,72 @@ public class HomeFragment extends Fragment {
                         postList.add(post);
                     }
                 }
-                postAdapter.notifyDataSetChanged();
+                filterPostsByType(TYPE_BOTH); // Show all by default
                 swipeRefreshLayout.setRefreshing(false);
-                tvEmpty.setVisibility(postList.isEmpty() ? View.VISIBLE : View.GONE);
+                tvEmpty.setVisibility(filteredPostList.isEmpty() ? View.VISIBLE : View.GONE);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
+    }
+
+    private void filterPostsByType(String type) {
+        filteredPostList.clear();
+        for (Post post : postList) {
+            if (post.type != null) {
+                String postType = post.type.trim();
+                if (type.equalsIgnoreCase(TYPE_BOTH)) {
+                    filteredPostList.add(post);
+                } else if (type.equalsIgnoreCase(postType) || TYPE_BOTH.equalsIgnoreCase(postType)) {
+                    filteredPostList.add(post);
+                }
+            }
+        }
+        sortPostsByProximity(postAdapter.userLocation);
+        postAdapter.notifyDataSetChanged();
+        tvEmpty.setVisibility(filteredPostList.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    private void sortPostsByProximity(Location userLocation) {
+        if (userLocation == null) return;
+        Collections.sort(filteredPostList, (post1, post2) -> {
+            double dist1 = getDistanceToUser(post1, userLocation);
+            double dist2 = getDistanceToUser(post2, userLocation);
+            return Double.compare(dist1, dist2);
+        });
+    }
+
+    private double getDistanceToUser(Post post, Location userLocation) {
+        if (post.latitude != null && post.longitude != null) {
+            float[] results = new float[1];
+            Location.distanceBetween(
+                userLocation.getLatitude(), userLocation.getLongitude(),
+                post.latitude, post.longitude, results
+            );
+            return results[0];
+        }
+        // If no coordinates, return a large value to push it to the end
+        return Double.MAX_VALUE;
+    }
+
+    private void highlightSelectedFilter(com.google.android.material.button.MaterialButton selectedButton) {
+        if (btnAll != null && btnRestaurants != null && btnCafe != null) {
+            btnAll.setStrokeWidth(2);
+            btnRestaurants.setStrokeWidth(2);
+            btnCafe.setStrokeWidth(2);
+            btnAll.setStrokeColorResource(R.color.black);
+            btnRestaurants.setStrokeColorResource(R.color.black);
+            btnCafe.setStrokeColorResource(R.color.black);
+            btnAll.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+            btnRestaurants.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+            btnCafe.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+        }
+        selectedButton.setStrokeWidth(4);
+        selectedButton.setStrokeColorResource(R.color.nav_default);
+        selectedButton.setBackgroundColor(getResources().getColor(R.color.nav_highlight));
+        selectedFilterButton = selectedButton;
     }
 
     // Function to show popup overlay with post details
@@ -248,18 +336,38 @@ public class HomeFragment extends Fragment {
         popupOverlayContainer.setVisibility(View.VISIBLE);
 
         ImageButton btnLike = popupView.findViewById(R.id.btn_like);
-        // Like button logic: toggle heart icon
-        final boolean[] liked = {false};
-        btnLike.setOnClickListener(v -> {
-            liked[0] = !liked[0];
-            if (liked[0]) {
-                btnLike.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
-                // Optionally show a toast or animation
-            } else {
-                btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
-            }
-        });
-        btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
+        // Like button logic: check if liked, update UI, and save/remove like in Firebase
+        SharedPreferences prefs = getContext().getSharedPreferences("user_session", Context.MODE_PRIVATE);
+        String userId = prefs.getString("userId", null);
+        DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("likes");
+        if (userId != null) {
+            DatabaseReference userLikeRef = likeRef.child(userId).child(post.id);
+            userLikeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    boolean liked = snapshot.exists();
+                    btnLike.setColorFilter(getResources().getColor(liked ? android.R.color.holo_red_dark : android.R.color.darker_gray));
+                    btnLike.setTag(liked);
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+            btnLike.setOnClickListener(v -> {
+                Object tag = btnLike.getTag();
+                boolean liked = tag instanceof Boolean && (Boolean) tag;
+                if (liked) {
+                    userLikeRef.removeValue();
+                    btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
+                    btnLike.setTag(false);
+                } else {
+                    userLikeRef.setValue(true);
+                    btnLike.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
+                    btnLike.setTag(true);
+                }
+            });
+        } else {
+            btnLike.setOnClickListener(v -> Toast.makeText(getContext(), "Please log in to like posts", Toast.LENGTH_SHORT).show());
+        }
 
         // Wire up Get Directions button in the popup
         Button getDirectionsBtn = popupView.findViewById(R.id.get_directions_btn);
@@ -393,6 +501,7 @@ public class HomeFragment extends Fragment {
         public List<String> imagesBase64;
         public Double latitude, longitude;
         public String contactNumber, openTime, closeTime;
+        public String type; // Add this field for filtering
         public Post() {}
     }
 

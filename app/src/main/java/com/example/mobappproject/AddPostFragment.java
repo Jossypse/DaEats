@@ -62,6 +62,8 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
     private Double selectedLat = null, selectedLng = null;
     private String openTime = "", closeTime = "";
     private String userId; // Add this field to store the current user's ID
+    private com.google.android.material.button.MaterialButtonToggleGroup rgStoreType;
+    private String storeType = null;
 
     private static final int REQUEST_PERMISSION_READ_IMAGES = 100;
     private AlertDialog progressDialog;
@@ -119,6 +121,16 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
         btnPickLocation.setOnClickListener(v -> launchLocationPickerDialog());
         etOpenTime.setOnClickListener(v -> showTimePicker(etOpenTime, true));
         etCloseTime.setOnClickListener(v -> showTimePicker(etCloseTime, false));
+        rgStoreType = view.findViewById(R.id.rgStoreType);
+        rgStoreType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                if (checkedId == R.id.rbCafe) storeType = "Cafe";
+                else if (checkedId == R.id.rbRestaurant) storeType = "Restaurant";
+                else if (checkedId == R.id.rbBoth) storeType = "Both";
+            } else if (rgStoreType.getCheckedButtonId() == -1) {
+                storeType = null;
+            }
+        });
 
         // Initialize Places SDK if not already
         if (!Places.isInitialized()) {
@@ -223,18 +235,19 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
         String contactNumber = etContactNumber.getText().toString().trim();
         String openTimeVal = etOpenTime.getText().toString().trim();
         String closeTimeVal = etCloseTime.getText().toString().trim();
+        String typeVal = storeType;
 
-        if (name.isEmpty() || address.isEmpty() || description.isEmpty() || contactNumber.isEmpty() || openTimeVal.isEmpty() || closeTimeVal.isEmpty() || selectedImageUris.isEmpty() || selectedLat == null || selectedLng == null) {
-            Toast.makeText(getContext(), "Please fill all fields, select at least one image, and pick a location", Toast.LENGTH_SHORT).show();
+        if (name.isEmpty() || address.isEmpty() || description.isEmpty() || contactNumber.isEmpty() || openTimeVal.isEmpty() || closeTimeVal.isEmpty() || selectedImageUris.isEmpty() || selectedLat == null || selectedLng == null || typeVal == null) {
+            Toast.makeText(getContext(), "Please fill all fields, select at least one image, pick a location, and select a type", Toast.LENGTH_SHORT).show();
             return;
         }
 
         btnSubmitPost.setEnabled(false);
         showProgressDialog("Uploading post...");
-        encodeAndUploadPost(name, address, description, contactNumber, openTimeVal, closeTimeVal, selectedImageUris);
+        encodeAndUploadPost(name, address, description, contactNumber, openTimeVal, closeTimeVal, selectedImageUris, typeVal);
     }
 
-    private void encodeAndUploadPost(String name, String address, String description, String contactNumber, String openTime, String closeTime, List<Uri> imageUris) {
+    private void encodeAndUploadPost(String name, String address, String description, String contactNumber, String openTime, String closeTime, List<Uri> imageUris, String type) {
         try {
             List<String> base64Images = new ArrayList<>();
             for (Uri imageUri : imageUris) {
@@ -261,6 +274,7 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
             postMap.put("latitude", selectedLat);
             postMap.put("longitude", selectedLng);
             postMap.put("userId", userId); // Optionally store userId in the post data
+            postMap.put("type", type);
             postsRef.child(postId).setValue(postMap)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Post uploaded successfully", Toast.LENGTH_SHORT).show();
@@ -274,6 +288,8 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
                     imageAdapter.notifyDataSetChanged();
                     selectedLat = null;
                     selectedLng = null;
+                    rgStoreType.clearChecked();
+                    storeType = null;
                     btnSubmitPost.setEnabled(true);
                     hideProgressDialog();
                 })

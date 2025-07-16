@@ -123,6 +123,7 @@
                         android:gravity="center_vertical">
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnAll"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:text="All"
@@ -132,6 +133,7 @@
                             android:layout_marginEnd="8dp"/>
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnRestaurants"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:text="Restaurants"
@@ -141,6 +143,7 @@
                             android:layout_marginEnd="8dp"/>
 
                         <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCafe"
                             android:layout_width="wrap_content"
                             android:layout_height="40dp"
                             android:text="Café"

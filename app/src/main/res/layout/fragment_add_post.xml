@@ -77,6 +77,53 @@
                 android:background="#E0E0E0"
                 android:layout_marginBottom="16dp"/>
 
+            <!-- Store Type Selection -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Type"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="4dp"/>
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:layout_marginBottom="12dp">
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/rgStoreType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/rbCafe"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cafe"
+                        app:cornerRadius="20dp"
+                        android:textColor="@color/black"
+                        android:layout_marginEnd="8dp"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/rbRestaurant"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Restaurant"
+                        app:cornerRadius="20dp"
+                        android:textColor="@color/black"
+                        android:layout_marginEnd="8dp"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/rbBoth"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Both"
+                        app:cornerRadius="20dp"
+                        android:textColor="@color/black"/>
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </HorizontalScrollView>
             <!-- Section: Store Info -->
             <TextView
                 android:layout_width="wrap_content"
