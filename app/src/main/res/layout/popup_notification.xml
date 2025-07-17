@@ -18,5 +18,8 @@
         android:id="@+id/btnClosePopup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/nav_highlight"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:text="Close" />
 </LinearLayout> 

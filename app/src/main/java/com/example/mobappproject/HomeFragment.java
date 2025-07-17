@@ -240,17 +240,21 @@ public class HomeFragment extends Fragment {
     private void highlightSelectedFilter(com.google.android.material.button.MaterialButton selectedButton) {
         if (btnAll != null && btnRestaurants != null && btnCafe != null) {
             btnAll.setStrokeWidth(2);
+            btnAll.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
             btnRestaurants.setStrokeWidth(2);
+            btnRestaurants.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
             btnCafe.setStrokeWidth(2);
-            btnAll.setStrokeColorResource(R.color.black);
-            btnRestaurants.setStrokeColorResource(R.color.black);
-            btnCafe.setStrokeColorResource(R.color.black);
+            btnCafe.setTextColor(ContextCompat.getColor(requireContext(), R.color.black));
+            btnAll.setStrokeColorResource(R.color.white);
+            btnRestaurants.setStrokeColorResource(R.color.white);
+            btnCafe.setStrokeColorResource(R.color.white);
             btnAll.setBackgroundColor(getResources().getColor(android.R.color.transparent));
             btnRestaurants.setBackgroundColor(getResources().getColor(android.R.color.transparent));
             btnCafe.setBackgroundColor(getResources().getColor(android.R.color.transparent));
         }
         selectedButton.setStrokeWidth(4);
         selectedButton.setStrokeColorResource(R.color.nav_default);
+        selectedButton.setTextColor(ContextCompat.getColor(requireContext(), R.color.white));
         selectedButton.setBackgroundColor(getResources().getColor(R.color.nav_highlight));
         selectedFilterButton = selectedButton;
     }

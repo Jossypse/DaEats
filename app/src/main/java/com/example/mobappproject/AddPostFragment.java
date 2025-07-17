@@ -104,7 +104,7 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
         View view = inflater.inflate(R.layout.fragment_add_post, container, false);
 
         rvImagePreview = view.findViewById(R.id.rvImagePreview);
-        imageAdapter = new ImageAdapter(getContext(), selectedImageUris);
+        imageAdapter = new ImageAdapter(selectedImageUris);
         rvImagePreview.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         rvImagePreview.setAdapter(imageAdapter);
         etName = view.findViewById(R.id.etName);

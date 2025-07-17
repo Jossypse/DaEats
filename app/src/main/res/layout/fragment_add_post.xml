@@ -5,11 +5,13 @@
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="6dp">
+    android:background="@color/white"
+    app:cardElevation="3dp">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/white"
         android:fillViewport="true">
 
         <LinearLayout
@@ -42,15 +44,16 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/nav_highlight"
                 android:text="Select Images"
-                app:icon="@drawable/ic_plus"
                 app:iconGravity="textStart"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="You can select multiple images."
+                android:text="No Image Yet"
                 android:textColor="#888"
                 android:textSize="12sp"
                 android:layout_marginBottom="8dp"/>
@@ -142,6 +145,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etName"
                     android:layout_width="match_parent"
+
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -180,8 +184,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Pick Location on Map"
-                app:icon="@drawable/ic_location_on"
-                app:iconGravity="textStart"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/nav_highlight"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"                app:iconGravity="textStart"
                 android:layout_marginBottom="12dp"/>
 
             <!-- Section: Store Hours -->
@@ -257,11 +262,11 @@
                 android:id="@+id/btnSubmitPost"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Post"
+                android:text="SHARE"
                 android:textStyle="bold"
-                android:backgroundTint="@color/black"
-                android:textColor="@android:color/white"
-                app:icon="@drawable/ic_plus"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/nav_highlight"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 app:iconGravity="textStart"/>
 
         </LinearLayout>

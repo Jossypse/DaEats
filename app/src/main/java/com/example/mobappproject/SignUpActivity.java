@@ -19,13 +19,15 @@ import com.google.firebase.database.DatabaseError;
 
 public class SignUpActivity extends AppCompatActivity {
     private EditText etFirstName, etLastName, etAddress, etUsername, etPassword;
-    private Button btnSignUp;
+    private Button btnSignUp,btnLogin;
     private DatabaseReference usersRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
+
+        btnLogin = findViewById(R.id.Login);
 
         etFirstName = findViewById(R.id.etFirstName);
         etLastName = findViewById(R.id.etLastName);
@@ -49,6 +51,12 @@ public class SignUpActivity extends AppCompatActivity {
                 }
                 generateUniqueUserIdAndSignUp(firstName, lastName, address, username, password);
             }
+        });
+
+        btnLogin.setOnClickListener(v -> {
+
+            startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
+
         });
     }
 

@@ -110,8 +110,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Sign Up"
+                    android:backgroundTint="@color/nav_highlight"
                     style="@style/Widget.MaterialComponents.Button"
                     android:layout_marginTop="24dp"
+                    app:cornerRadius="8dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/Login"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOG IN"
+                    android:elevation="10dp"
+                    android:backgroundTint="@color/nav_highlight"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_marginTop="2dp"
                     app:cornerRadius="8dp" />
 
             </LinearLayout>

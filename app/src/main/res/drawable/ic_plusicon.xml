@@ -4,7 +4,14 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
+
+    <!-- Vertical Bar of Plus -->
     <path
         android:fillColor="#222222"
-        android:pathData="M10,20v-6h4v6h5v-8h3L12,3 2,12h3v8h5z"/>
+        android:pathData="M11,5h2v14h-2z"/>
+
+    <!-- Horizontal Bar of Plus -->
+    <path
+        android:fillColor="#222222"
+        android:pathData="M5,11h14v2H5z"/>
 </vector>

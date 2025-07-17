@@ -22,9 +22,12 @@
 
         <Button
             android:id="@+id/btn_close_directions"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Close"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/nav_highlight"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_gravity="end"
             android:layout_marginTop="8dp"/>
     </LinearLayout>

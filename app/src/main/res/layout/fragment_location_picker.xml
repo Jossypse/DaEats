@@ -8,13 +8,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Current Location Button -->
-        <Button
-            android:id="@+id/btnCurrentLocation"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Current Location"
-            android:layout_marginBottom="8dp" />
+
 
         <!-- Map Container -->
         <FrameLayout
@@ -29,6 +23,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Confirm Location"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/nav_highlight"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_margin="16dp" />
+        <!-- Current Location Button -->
+        <Button
+            android:id="@+id/btnCurrentLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current Location"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/nav_highlight"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_margin="16dp" />
     </LinearLayout>
 
