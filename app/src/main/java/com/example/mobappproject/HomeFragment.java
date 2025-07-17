@@ -1,7 +1,10 @@
 package com.example.mobappproject;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
+
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,6 +72,14 @@ public class HomeFragment extends Fragment {
     private static final String TYPE_CAFE = "Cafe";
     private static final String TYPE_RESTAURANT = "Restaurant";
 
+    private View topLikesInclude;
+    private ImageView topLikesImage;
+    private TextView topLikesName, topLikesAddress, topLikesRating;
+
+    private RecyclerView rvTopLikes;
+    private TopLikesAdapter topLikesAdapter;
+    private List<Post> topLikedPosts = new ArrayList<>();
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
@@ -80,6 +91,14 @@ public class HomeFragment extends Fragment {
         rvPosts.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         rvPosts.setAdapter(postAdapter);
         swipeRefreshLayout.setOnRefreshListener(this::loadPosts);
+        
+        // Top Likes RecyclerView
+        rvTopLikes = view.findViewById(R.id.rvTopLikes);
+        topLikesAdapter = new TopLikesAdapter(topLikedPosts, this::showPostPopup);
+        rvTopLikes.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        rvTopLikes.setAdapter(topLikesAdapter);
+        rvTopLikes.setVisibility(View.GONE);
+        
         loadPosts();
 
         // Set greeting and address from SharedPreferences
@@ -156,7 +175,7 @@ public class HomeFragment extends Fragment {
     private void loadPosts() {
         swipeRefreshLayout.setRefreshing(true);
         DatabaseReference postsRef = FirebaseDatabase.getInstance().getReference("posts");
-        postsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        postsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 postList.clear();
@@ -170,6 +189,7 @@ public class HomeFragment extends Fragment {
                 filterPostsByType(TYPE_BOTH); // Show all by default
                 swipeRefreshLayout.setRefreshing(false);
                 tvEmpty.setVisibility(filteredPostList.isEmpty() ? View.VISIBLE : View.GONE);
+                displayTopLikedPosts(); // Show all top liked posts
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -235,6 +255,23 @@ public class HomeFragment extends Fragment {
         selectedFilterButton = selectedButton;
     }
 
+    private void displayTopLikedPosts() {
+        topLikedPosts.clear();
+        for (Post post : postList) {
+            if (post.likes != null && post.likes > 0) {
+                topLikedPosts.add(post);
+            }
+        }
+        // Sort descending by likes
+        Collections.sort(topLikedPosts, (a, b) -> b.likes.compareTo(a.likes));
+        if (!topLikedPosts.isEmpty()) {
+            rvTopLikes.setVisibility(View.VISIBLE);
+            topLikesAdapter.notifyDataSetChanged();
+        } else {
+            rvTopLikes.setVisibility(View.GONE);
+        }
+    }
+
     // Function to show popup overlay with post details
     private void showPostPopup(Post post) {
         if (getContext() == null || popupOverlayContainer == null) return;
@@ -249,6 +286,8 @@ public class HomeFragment extends Fragment {
         TextView hoursText = popupView.findViewById(R.id.hours_text);
         TextView phoneText = popupView.findViewById(R.id.phone_text);
         TextView travelTimeText = popupView.findViewById(R.id.travel_time);
+        TextView likesCountText = popupView.findViewById(R.id.liked_count); // Add this line to get the likes count view
+        TextView ratingScoreTextView = popupView.findViewById(R.id.rating_score);
         // Travel mode cycling setup
         final String[] modes = {"car", "motorcycle", "walk", "bike"};
         final double[] speeds = {666.67, 500.0, 80.0, 250.0}; // meters/min: car~40km/h, motorcycle~30km/h, walk~5km/h, bike~15km/h
@@ -340,6 +379,7 @@ public class HomeFragment extends Fragment {
         SharedPreferences prefs = getContext().getSharedPreferences("user_session", Context.MODE_PRIVATE);
         String userId = prefs.getString("userId", null);
         DatabaseReference likeRef = FirebaseDatabase.getInstance().getReference("likes");
+        DatabaseReference postRef = FirebaseDatabase.getInstance().getReference("posts").child(post.id);
         if (userId != null) {
             DatabaseReference userLikeRef = likeRef.child(userId).child(post.id);
             userLikeRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -359,15 +399,68 @@ public class HomeFragment extends Fragment {
                     userLikeRef.removeValue();
                     btnLike.setColorFilter(getResources().getColor(android.R.color.darker_gray));
                     btnLike.setTag(false);
+                    // Decrement likes in post
+                    postRef.child("likes").runTransaction(new com.google.firebase.database.Transaction.Handler() {
+                        @Override
+                        public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData currentData) {
+                            Integer currentLikes = currentData.getValue(Integer.class);
+                            if (currentLikes == null || currentLikes <= 0) {
+                                currentData.setValue(0);
+                            } else {
+                                currentData.setValue(currentLikes - 1);
+                            }
+                            return com.google.firebase.database.Transaction.success(currentData);
+                        }
+                        @Override
+                        public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                            Integer likes = currentData.getValue(Integer.class);
+                            if (likesCountText != null) {
+                                likesCountText.setText(likes != null ? String.valueOf(likes) : "0");
+                            }
+                        }
+                    });
                 } else {
                     userLikeRef.setValue(true);
                     btnLike.setColorFilter(getResources().getColor(android.R.color.holo_red_dark));
                     btnLike.setTag(true);
+                    // Increment likes in post
+                    postRef.child("likes").runTransaction(new com.google.firebase.database.Transaction.Handler() {
+                        @Override
+                        public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData currentData) {
+                            Integer currentLikes = currentData.getValue(Integer.class);
+                            if (currentLikes == null) {
+                                currentData.setValue(1);
+                            } else {
+                                currentData.setValue(currentLikes + 1);
+                            }
+                            return com.google.firebase.database.Transaction.success(currentData);
+                        }
+                        @Override
+                        public void onComplete(DatabaseError error, boolean committed, DataSnapshot currentData) {
+                            Integer likes = currentData.getValue(Integer.class);
+                            if (likesCountText != null) {
+                                likesCountText.setText(likes != null ? String.valueOf(likes) : "0");
+                            }
+                        }
+                    });
                 }
             });
         } else {
             btnLike.setOnClickListener(v -> Toast.makeText(getContext(), "Please log in to like posts", Toast.LENGTH_SHORT).show());
         }
+
+        // Set initial likes count
+        postRef.child("likes").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Integer likes = snapshot.getValue(Integer.class);
+                if (likesCountText != null) {
+                    likesCountText.setText(likes != null ? String.valueOf(likes) : "0");
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
 
         // Wire up Get Directions button in the popup
         Button getDirectionsBtn = popupView.findViewById(R.id.get_directions_btn);
@@ -396,12 +489,30 @@ public class HomeFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 reviewList.clear();
                 reviewerIds.clear();
+                int totalStars = 0;
+                int reviewCount = 0;
                 for (DataSnapshot child : snapshot.getChildren()) {
                     Review review = child.getValue(Review.class);
                     if (review != null) {
                         reviewList.add(review);
                         reviewerIds.add(child.getKey()); // userId is the key
+                        // Only count reviews for this post.id (should always be true in this structure)
+                        totalStars += review.star;
+                        reviewCount++;
                     }
+                }
+                // Calculate and display average rating if there are reviews
+                if (reviewCount > 0) {
+                    double average = (double) totalStars / reviewCount;
+                    ratingScoreTextView.setText(String.format("%.1f", average));
+                    // Upload the final rating to the post in Firebase
+                    DatabaseReference postRatingRef = FirebaseDatabase.getInstance().getReference("posts").child(post.id).child("rating");
+                    postRatingRef.setValue(average);
+                } else {
+                    ratingScoreTextView.setText("0.0");
+                    // If no reviews, set rating to 0.0 in Firebase
+                    DatabaseReference postRatingRef = FirebaseDatabase.getInstance().getReference("posts").child(post.id).child("rating");
+                    postRatingRef.setValue(0.0);
                 }
                 reviewAdapter.notifyDataSetChanged();
             }
@@ -441,8 +552,17 @@ public class HomeFragment extends Fragment {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_review, null);
         RatingBar ratingBar = dialogView.findViewById(R.id.rating_bar);
         EditText editComment = dialogView.findViewById(R.id.edit_comment);
+
+        // Custom title
+        TextView title = new TextView(getContext());
+        title.setText("Write a Review");
+        title.setPadding(32, 32, 32, 16);
+        title.setGravity(Gravity.CENTER);
+        title.setTextSize(20);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setTextColor(ContextCompat.getColor(getContext(), android.R.color.black));
         new AlertDialog.Builder(getContext())
-            .setTitle("Write a Review")
+            .setCustomTitle(title)
             .setView(dialogView)
             .setPositiveButton("Submit", (dialog, which) -> {
                 int star = (int) ratingBar.getRating();
@@ -450,7 +570,7 @@ public class HomeFragment extends Fragment {
                 if (star > 0 && !comment.isEmpty()) {
                     saveReviewToFirebase(post, star, comment);
                 } else {
-                    Toast.makeText(getContext(), "Please provide a rating and comment", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Please provide a rating and Review", Toast.LENGTH_SHORT).show();
                 }
             })
             .setNegativeButton("Cancel", null)
@@ -502,6 +622,7 @@ public class HomeFragment extends Fragment {
         public Double latitude, longitude;
         public String contactNumber, openTime, closeTime;
         public String type; // Add this field for filtering
+        public Integer likes; // Add this field for likes
         public Post() {}
     }
 
@@ -580,7 +701,7 @@ public class HomeFragment extends Fragment {
     }
 
     // ImageSliderAdapter for ViewPager2
-    class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.ImageViewHolder> {
+    static class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.ImageViewHolder> {
         private List<String> imagesBase64;
         public ImageSliderAdapter(List<String> imagesBase64) { this.imagesBase64 = imagesBase64; }
         @NonNull
@@ -613,6 +734,62 @@ public class HomeFragment extends Fragment {
             public ImageViewHolder(@NonNull View itemView) {
                 super(itemView);
                 imageView = (ImageView) itemView;
+            }
+        }
+    }
+
+    // Adapter for Top Liked Posts
+    public class TopLikesAdapter extends RecyclerView.Adapter<TopLikesAdapter.TopLikesViewHolder> {
+        private List<Post> posts;
+        private OnPostClickListener onPostClickListener;
+        public TopLikesAdapter(List<Post> posts, OnPostClickListener listener) {
+            this.posts = posts;
+            this.onPostClickListener = listener;
+        }
+        @NonNull
+        @Override
+        public TopLikesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.toplikes, parent, false);
+            return new TopLikesViewHolder(v);
+        }
+        @Override
+        public void onBindViewHolder(@NonNull TopLikesViewHolder holder, int position) {
+            Post post = posts.get(position);
+            holder.name.setText(post.name);
+            holder.address.setText(post.address);
+            holder.rating.setText("\u2764 " + post.likes);
+            // Set image
+            if (post.imagesBase64 != null && !post.imagesBase64.isEmpty()) {
+                String base64 = post.imagesBase64.get(0);
+                if (base64 != null && !base64.isEmpty()) {
+                    try {
+                        byte[] imageBytes = Base64.decode(base64, Base64.DEFAULT);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                        holder.image.setImageBitmap(bitmap);
+                    } catch (Exception e) {
+                        holder.image.setImageResource(android.R.color.darker_gray);
+                    }
+                } else {
+                    holder.image.setImageResource(android.R.color.darker_gray);
+                }
+            } else {
+                holder.image.setImageResource(android.R.color.darker_gray);
+            }
+            holder.itemView.setOnClickListener(v -> {
+                if (onPostClickListener != null) onPostClickListener.onPostClick(post);
+            });
+        }
+        @Override
+        public int getItemCount() { return posts.size(); }
+        class TopLikesViewHolder extends RecyclerView.ViewHolder {
+            ImageView image;
+            TextView name, address, rating;
+            public TopLikesViewHolder(@NonNull View itemView) {
+                super(itemView);
+                image = itemView.findViewById(R.id.image);
+                name = itemView.findViewById(R.id.name);
+                address = itemView.findViewById(R.id.address);
+                rating = itemView.findViewById(R.id.cafe_rating);
             }
         }
     }

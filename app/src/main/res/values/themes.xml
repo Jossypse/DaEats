@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.Mobappproject" parent="Base.Theme.Mobappproject" />
+    <style name="RoundedImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">70dp</item> <!-- Half of width/height for a circle -->
+    </style>
+
+    
 </resources>

@@ -161,8 +161,6 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="4dp"
                     android:layout_marginBottom="16dp">
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvPosts"
@@ -194,32 +192,13 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"/>
 
-                <!-- Liked Places Card -->
-                <androidx.cardview.widget.CardView
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvTopLikes"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:padding="16dp"
-                        android:gravity="center_vertical">
-                        <ImageView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:src="@drawable/ic_heart"
-                            android:layout_marginEnd="12dp"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Hoogpaan Restaurant"
-                            android:textSize="16sp"
-                            android:textColor="@color/black"
-                            android:fontFamily="sans-serif"/>
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                    android:visibility="gone"
+                    android:paddingBottom="16dp"/>
+
 
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>

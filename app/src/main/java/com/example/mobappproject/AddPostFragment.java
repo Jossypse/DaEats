@@ -275,6 +275,7 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
             postMap.put("longitude", selectedLng);
             postMap.put("userId", userId); // Optionally store userId in the post data
             postMap.put("type", type);
+            postMap.put("likes", 0); // Initialize likes to 0
             postsRef.child(postId).setValue(postMap)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(getContext(), "Post uploaded successfully", Toast.LENGTH_SHORT).show();
