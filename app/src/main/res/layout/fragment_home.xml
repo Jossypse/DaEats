@@ -81,20 +81,23 @@
                         android:textColor="@color/black"/>
                 </LinearLayout>
 
-<!--                &lt;!&ndash; Search Bar &ndash;&gt;-->
-<!--                <com.google.android.material.textfield.TextInputLayout-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginBottom="16dp"-->
-<!--                    app:boxCornerRadiusTopStart="16dp" app:boxCornerRadiusTopEnd="16dp" app:boxCornerRadiusBottomStart="16dp" app:boxCornerRadiusBottomEnd="16dp">-->
-<!--                    <com.google.android.material.textfield.TextInputEditText-->
-<!--                        android:id="@+id/search_bar"-->
-<!--                        android:layout_width="match_parent"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:hint="Start searching here..."-->
-<!--                        android:inputType="text"-->
-<!--                        android:padding="10dp"/>-->
-<!--                </com.google.android.material.textfield.TextInputLayout>-->
+                <!-- Search Bar -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/search_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Search"
+                        android:inputType="text"
+                        android:padding="10dp"/>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Discover Places Header -->
                 <TextView

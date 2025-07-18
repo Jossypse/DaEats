@@ -48,6 +48,9 @@ import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.Toast;
 import java.util.Collections;
+import com.google.android.material.textfield.TextInputEditText;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvPosts;
@@ -79,6 +82,9 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvTopLikes;
     private TopLikesAdapter topLikesAdapter;
     private List<Post> topLikedPosts = new ArrayList<>();
+
+    private TextInputEditText searchBar;
+    private String currentSearchQuery = "";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -127,14 +133,31 @@ public class HomeFragment extends Fragment {
         btnAll.setOnClickListener(v -> {
             filterPostsByType(TYPE_BOTH);
             highlightSelectedFilter(btnAll);
+            filterPostsBySearch(currentSearchQuery); // Apply search filter after type filter
         });
         btnRestaurants.setOnClickListener(v -> {
             filterPostsByType(TYPE_RESTAURANT);
             highlightSelectedFilter(btnRestaurants);
+            filterPostsBySearch(currentSearchQuery);
         });
         btnCafe.setOnClickListener(v -> {
             filterPostsByType(TYPE_CAFE);
             highlightSelectedFilter(btnCafe);
+            filterPostsBySearch(currentSearchQuery);
+        });
+
+        // Search bar logic
+        searchBar = view.findViewById(R.id.search_bar);
+        searchBar.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                currentSearchQuery = s.toString();
+                filterPostsBySearch(currentSearchQuery);
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
 
         return view;
@@ -187,6 +210,7 @@ public class HomeFragment extends Fragment {
                     }
                 }
                 filterPostsByType(TYPE_BOTH); // Show all by default
+                filterPostsBySearch(currentSearchQuery); // Apply search filter if any
                 swipeRefreshLayout.setRefreshing(false);
                 tvEmpty.setVisibility(filteredPostList.isEmpty() ? View.VISIBLE : View.GONE);
                 displayTopLikedPosts(); // Show all top liked posts
@@ -616,6 +640,49 @@ public class HomeFragment extends Fragment {
             popupOverlayContainer.setVisibility(View.GONE);
             popupOverlayContainer.removeAllViews();
         }
+    }
+
+    // This method should be called after filterPostsByType or when search changes
+    private void filterPostsBySearch(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            postAdapter.posts = new ArrayList<>(filteredPostList);
+            postAdapter.notifyDataSetChanged();
+            tvEmpty.setVisibility(filteredPostList.isEmpty() ? View.VISIBLE : View.GONE);
+            return;
+        }
+        String lowerQuery = query.toLowerCase();
+        List<Post> searchFiltered = new ArrayList<>();
+        Double queryNumber = null;
+        try {
+            queryNumber = Double.parseDouble(query.trim());
+        } catch (NumberFormatException ignored) {}
+        for (Post post : filteredPostList) {
+            boolean matchesName = post.name != null && post.name.toLowerCase().contains(lowerQuery);
+            boolean matchesAddress = post.address != null && post.address.toLowerCase().contains(lowerQuery);
+            boolean matchesDistance = false;
+            if (post.latitude != null && post.longitude != null && postAdapter.userLocation != null) {
+                float[] results = new float[1];
+                Location.distanceBetween(postAdapter.userLocation.getLatitude(), postAdapter.userLocation.getLongitude(), post.latitude, post.longitude, results);
+                float distanceKm = results[0] / 1000f;
+                String distanceStr = String.format("%.1f", distanceKm);
+                // If query is a number, match within ±3km
+                if (queryNumber != null) {
+                    if (Math.abs(distanceKm - queryNumber) <= 3.0) {
+                        matchesDistance = true;
+                    }
+                } else {
+                    // Otherwise, match if the distance string contains the query
+                    matchesDistance = distanceStr.contains(lowerQuery);
+                }
+            }
+            if (matchesName || matchesAddress || matchesDistance) {
+                searchFiltered.add(post);
+            }
+        }
+        // Update adapter with filtered list
+        postAdapter.posts = searchFiltered;
+        postAdapter.notifyDataSetChanged();
+        tvEmpty.setVisibility(searchFiltered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     // Post model
