@@ -48,6 +48,8 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
 import android.app.TimePickerDialog;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class AddPostFragment extends Fragment implements LocationPickerFragment.OnLocationPickedListener {
     private static final int PICK_IMAGES_REQUEST = 1;
@@ -219,12 +221,23 @@ public class AddPostFragment extends Fragment implements LocationPickerFragment.
     }
 
     private void showTimePicker(EditText target, boolean isOpen) {
-        int hour = 9, minute = 0;
-        TimePickerDialog timePickerDialog = new TimePickerDialog(getContext(), (view, hourOfDay, minuteOfHour) -> {
-            String time = String.format("%02d:%02d", hourOfDay, minuteOfHour);
-            target.setText(time);
-            if (isOpen) openTime = time; else closeTime = time;
-        }, hour, minute, true);
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        // Use spinner style for TimePickerDialog
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+            getContext(),
+            android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
+            (view, hourOfDay, minuteOfHour) -> {
+                String amPm = hourOfDay < 12 ? "AM" : "PM";
+                int hour12 = hourOfDay % 12;
+                if (hour12 == 0) hour12 = 12;
+                String time = String.format(Locale.getDefault(), "%02d:%02d %s", hour12, minuteOfHour, amPm);
+                target.setText(time);
+                if (isOpen) openTime = time; else closeTime = time;
+            },
+            hour, minute, false // false = 12-hour format
+        );
         timePickerDialog.show();
     }
 
