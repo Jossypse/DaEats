@@ -18,28 +18,35 @@
             android:layout_height="200dp">
 
             <ImageView
-                android:id="@+id/ivPostImage"
+                android:id="@+id/ivUserPostImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
                 android:background="@drawable/ic_launcher_background"
-                android:contentDescription="Post image"/>
+                android:contentDescription="User Post image"/>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_gravity="bottom"/>
+            <!-- Delete button, top-right -->
+            <ImageButton
+                android:id="@+id/btnDeleteUserPost"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="top|end"
+                android:background="@android:color/transparent"
+                android:src="@android:drawable/ic_menu_delete"
+                android:contentDescription="Delete post"
+                android:padding="6dp"
+                app:tint="#000000" />
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@android:color/white"
             android:padding="16dp">
 
             <TextView
-                android:id="@+id/tvPostName"
+                android:id="@+id/tvUserPostName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
@@ -49,7 +56,7 @@
                 android:ellipsize="end"/>
 
             <TextView
-                android:id="@+id/tvPostAddress"
+                android:id="@+id/tvUserPostAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#666"
@@ -58,16 +65,23 @@
                 android:ellipsize="end"/>
 
             <TextView
-                android:id="@+id/tvPostDistance"
+                android:id="@+id/tvUserPostDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#444"
+                android:textSize="15sp"
+                android:maxLines="3"
+                android:ellipsize="end"
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:id="@+id/tvUserPostType"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#008577"
                 android:textSize="14sp"
-               />
-
-           
-
+                android:layout_marginTop="4dp"/>
 
         </LinearLayout>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</androidx.cardview.widget.CardView> 
